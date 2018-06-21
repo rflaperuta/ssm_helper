@@ -1,5 +1,41 @@
-# AWS SSM Helper
-AWS SSM Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust.
+AWS SSM Helper
+===
+AWS SSM Parameter Store Helper - A command line tool for AWS SSM Parameters, written in Rust.
+
+Contents
+- [AWS SSM Helper](#aws-ssm-helper)
+    - [About](#about)
+    - [Installation](#installation)
+    - [Command Line](#command-line)
+    - [TODO](#todo)
+
+## About
+
+No more saving credentials or configuration parameters in local files manualy.
+
+Now you can organize all your Application Parameters inside AWS SSM Parameter Store, and retrieve them when needed.
+
+You can also, generate config files on the fly, just by using embedded handlebars template processing.
+
+More:
+
+[AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/#Parameter_Store)
+
+[AWS Systems Manager Parameters Documentation](https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-about.html)
+
+
+## Installation
+Install Rust: [rust-lang](https://www.rust-lang.org/en-US/install.html)
+
+For now:
+```
+git clone git@github.com:rflaperuta/ssm_helper.git
+cd ./ssm_helper
+cargo build --release
+cd ./target/release/
+strip ./ssm_helper
+cp ./ssm_helper /your/bin/path
+```
 
 ## Command Line
 ```
@@ -21,13 +57,21 @@ SUBCOMMANDS:
 ```
 
 ## TODO
+    Implement:
+    [ ] Quiet Mode
+    [ ] Logging
+    [ ] Template Processing
+    [ ] Clone Parameter Value
+    [ ] Fail Crate
+    [ ] Default for Requests?
 
-    [ ] Implement:
-    [ ] - Quiet
-    [ ] - Template
-    [ ] - Clone
-    [ ] - Fail Crate
-    [ ] - Default for Requests?
+    Improve:
+    [ ] Pagination calls
+    [ ] Readme
+    [ ] Output: human, json
 
-    [ ] Improve:
-    [ ] - pagination calls
+    Cargo Install:
+    [ ] Tests
+    [ ] Docs
+    [ ] CI/CD
+    [ ] Badges
