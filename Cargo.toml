@@ -1,0 +1,29 @@
+[package]
+authors = ["Rodrigo Falcetta Laperuta <rflaperuta@gmail.com>"]
+categories = []
+description = "AWS SSM Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust."
+documentation = "https://docs.rs/ssm_helper"
+homepage = "https://github.com/rflaperuta/ssm_helper"
+keywords = ["ssm", "aws", "systems manager", "template", "parameters"]
+license = "MIT/Apache-2.0"
+name = "ssm_helper"
+readme = "readme.md"
+repository = "https://github.com/rflaperuta/ssm_helper.git"
+version = "0.1.0"
+[[bin]]
+bench = false
+name = "ssm_helper"
+path = "src/main.rs"
+
+[dependencies]
+rusoto_core = "0.32.0"
+rusoto_ssm = "0.32.0"
+serde = "1.0.66"
+serde_derive = "1.0.66"
+serde_json = "1.0.21"
+
+[dependencies.structopt]
+default-features = false
+version = "0.2.8"
+[profile.release]
+debug = true
