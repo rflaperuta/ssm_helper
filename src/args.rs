@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 
 #[derive(Debug, StructOpt)]
-#[structopt(about = "AWS SSM Helper - A command line helper for AWS SSM Parameters in Rust.")]
+#[structopt(about = "AWS SSM Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust.")]
 pub struct Opt {
     /// AWS Region
     #[structopt(short = "r", long = "region", default_value = "us-east-1")]
