@@ -1,15 +1,23 @@
-#[macro_use]
-extern crate structopt;
+// Copyright (c) 2016 ssm_helper developers
+//
+// Licensed under the Apache License, Version 2.0
+// <LICENSE-APACHE or http://www.apache.org/licenses/LICENSE-2.0> or the MIT
+// license <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
+// option. All files in the project carrying such notice may not be copied,
+// modified, or distributed except according to those terms.
 
-#[macro_use]
-extern crate serde_derive;
+use std::process;
+
+#[macro_use] extern crate structopt;
 
 extern crate serde;
 extern crate serde_json;
+#[macro_use] extern crate serde_derive;
+
 extern crate rusoto_core;
 extern crate rusoto_ssm;
 
-use std::process;
+extern crate handlebars;
 
 use structopt::StructOpt;
 
@@ -33,13 +41,21 @@ mod ssm_parameters;
 /// 
 /// TODO
 /// Implement:
-/// - Quiet
-/// - Template
-/// - Clone
-/// - Fail Crate
-/// - Default for Requests?
+/// [ ] Quiet Mode
+/// [ ] Logging
+/// [ ] Template Processing
+/// [ ] Clone Parameter Value
+/// [ ] Fail Crate
+/// [ ] Impl Default for Requests?
 /// Improve:
-/// - pagination calls
+/// [ ] Pagination calls
+/// [ ] Readme
+/// [ ] Output: human readable != json
+/// [ ] Tests
+/// Cargo Install:
+/// [ ] Docs
+/// [ ] CI/CD
+/// [ ] Badges
 fn main() {
     let clap_options = Opt::clap().get_matches_safe();
 
@@ -65,7 +81,10 @@ fn main() {
                     .parameters.into_iter()
                     .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
         },
-    //     Command::Template{ templatein, templateout } => println!("IN: {:#?} - OUT: {:#?}", templatein, templateout),
+        Command::Template{ templatein, templateout } => {
+            println!("IN: {:#?} - OUT: {:#?}", templatein, templateout);
+            ssm.process_template(templatein, templateout);
+        },
     //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
         _ => {()}
     }

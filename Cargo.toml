@@ -23,7 +23,6 @@ serde_derive = "1.0.66"
 serde_json = "1.0.21"
 #handlebars = "0.32.4"
 handlebars = {git = "https://github.com/sunng87/handlebars-rust"}
-liquid = "0.14.3"
 
 [dependencies.structopt]
 default-features = false
