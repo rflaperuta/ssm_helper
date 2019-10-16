@@ -10,27 +10,32 @@ name = "ssm_helper"
 readme = "readme.md"
 repository = "https://github.com/rflaperuta/ssm_helper.git"
 version = "0.1.0"
+edition = "2018"
 [[bin]]
 bench = false
 name = "ssm_helper"
 path = "src/main.rs"
 
 [dependencies]
-rusoto_core = "0.32.0"
-rusoto_ssm = "0.32.0"
-serde = "1.0.66"
-serde_derive = "1.0.66"
-serde_json = "1.0.21"
-#handlebars = "0.32.4"
-handlebars = {git = "https://github.com/sunng87/handlebars-rust"}
+rusoto_core = "0.41.0"
+rusoto_ssm = "0.41.0"
+serde = "1.0.101"
+serde_derive = "1.0.101"
+serde_json = "1.0.41"
+handlebars = "2.0.2"
+failure = "0.1.6"
+failure_derive = "0.1.6"
+
 
 [dependencies.structopt]
 default-features = false
-version = "0.2.8"
+version = "0.3.3"
+
+
 [profile.release]
 debug = false
 lto = true
 # Optimize for size
-opt-level = 's'
+#opt-level = 's'
 # Aggressive optimizations for size, further speed costs
-#opt-level = 'z'
+opt-level = 'z'

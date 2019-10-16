@@ -1,2 +1,2 @@
-{{ ssm "param2" }}
-{{ ssm "/test/param3" }}
+{{ssm "/example/parameter/one"}}
+{{ssm "/example/parameter/two"}}

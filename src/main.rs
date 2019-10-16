@@ -6,13 +6,16 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+use failure::Error;
 use std::process;
 
-#[macro_use] extern crate structopt;
+#[macro_use]
+extern crate structopt;
 
 extern crate serde;
 extern crate serde_json;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate serde_derive;
 
 extern crate rusoto_core;
 extern crate rusoto_ssm;
@@ -38,7 +41,7 @@ mod ssm_parameters;
 /// get, g PARAM => get param by name(path)
 /// template, t, FILENAME_IN.tpl [FILENAME_OUT.ext] => parse template and substitute named paths
 /// clone <origin> <destination>, c <origin> <destination> => Copy a Parameter's Value from origin key to destination key
-/// 
+///
 /// TODO
 /// Implement:
 /// [ ] Quiet Mode
@@ -56,7 +59,7 @@ mod ssm_parameters;
 /// [ ] Docs
 /// [ ] CI/CD
 /// [ ] Badges
-fn main() {
+fn main() -> Result<(), Error> {
     let clap_options = Opt::clap().get_matches_safe();
 
     // Will exit with error code 1 even for VersionDisplayed and HelpDisplayed
@@ -71,23 +74,37 @@ fn main() {
     let ssm = SSMOps::new(&options.region);
 
     match options.cmd {
-        Command::Get{ name } => {
-            ssm.get_parameters(&SSMParametersRequest { names: name, with_decryption: Some(decrypt) }).unwrap()
-                    .parameters.into_iter()
-                    .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
-        },
-        Command::ListAll{} => {
-            ssm.get_parameters_by_path(&SSMParametersByPathRequest { path: String::from("/"), recursive: Some(true), with_decryption: Some(decrypt) }).unwrap()
-                    .parameters.into_iter()
-                    .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
-        },
-        Command::Template{ templatein, templateout } => {
+        Command::Get { name } => {
+            ssm.get_parameters(&SSMParametersRequest {
+                names: name,
+                with_decryption: Some(decrypt),
+            })?
+            .parameters
+            .into_iter()
+            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
+        }
+        Command::ListAll {} => {
+            ssm.get_parameters_by_path(&SSMParametersByPathRequest {
+                path: String::from("/"),
+                recursive: Some(true),
+                with_decryption: Some(decrypt),
+            })
+            .unwrap()
+            .parameters
+            .into_iter()
+            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
+        }
+        Command::Template {
+            templatein,
+            templateout,
+        } => {
             println!("IN: {:#?} - OUT: {:#?}", templatein, templateout);
             ssm.process_template(templatein, templateout);
-        },
-    //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
-        _ => {()}
+        }
+        //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
+        _ => (),
     }
+    Ok(())
 }
 
 #[cfg(test)]
@@ -104,23 +121,32 @@ mod tests {
         let decrypt = true;
         let ssm = SSMOps::new("us-east-1");
         let name = vec!["/test/ssm_helper/param1".to_string()];
-        let result = ssm.get_parameters(&SSMParametersRequest { names: name, with_decryption: Some(decrypt) });
+        let result = ssm.get_parameters(&SSMParametersRequest {
+            names: name,
+            with_decryption: Some(decrypt),
+        });
         assert!(result.is_ok());
         let unw_result = result.unwrap();
         assert!(unw_result.parameters.len() > 0);
-        assert!(unw_result.invalid_parameters.len() == 0);
+        assert_eq!(unw_result.invalid_parameters.len(), 0);
     }
 
     #[test]
     fn get_parameter_and_error() {
         let decrypt = true;
         let ssm = SSMOps::new("us-east-1");
-        let name = vec!["/test/ssm_helper/one".to_string(), "/dev/asdasdasd".to_string()];
-        let result = ssm.get_parameters(&SSMParametersRequest { names: name, with_decryption: Some(decrypt) });
+        let name = vec![
+            "/test/ssm_helper/one".to_string(),
+            "/dev/asdasdasd".to_string(),
+        ];
+        let result = ssm.get_parameters(&SSMParametersRequest {
+            names: name,
+            with_decryption: Some(decrypt),
+        });
         assert!(result.is_ok());
         let unw_result = result.unwrap();
-        assert!(unw_result.parameters.len() == 1);
-        assert!(unw_result.invalid_parameters.len() == 1);
+        assert_eq!(unw_result.parameters.len(), 1);
+        assert_eq!(unw_result.invalid_parameters.len(), 1);
     }
 
     #[test]
@@ -128,7 +154,10 @@ mod tests {
         let decrypt = true;
         let ssm = SSMOps::new("us-east-1");
         let name = vec!["/asdasdasd".to_string()];
-        let result = ssm.get_parameters(&SSMParametersRequest { names: name, with_decryption: Some(decrypt) });
+        let result = ssm.get_parameters(&SSMParametersRequest {
+            names: name,
+            with_decryption: Some(decrypt),
+        });
         assert!(result.is_err());
     }
 
@@ -138,11 +167,15 @@ mod tests {
         let ssm = SSMOps::new("us-east-1");
         let path = "/".to_string();
         let recursive = true;
-        let result = ssm.get_parameters_by_path(&SSMParametersByPathRequest { path: path, with_decryption: Some(decrypt), recursive: Some(recursive) });
+        let result = ssm.get_parameters_by_path(&SSMParametersByPathRequest {
+            path: path,
+            with_decryption: Some(decrypt),
+            recursive: Some(recursive),
+        });
         assert!(result.is_ok());
         let unw_result = result.unwrap();
         assert!(unw_result.parameters.len() > 0);
-        assert!(unw_result.invalid_parameters.len() == 0);
+        assert_eq!(unw_result.invalid_parameters.len(), 0);
     }
 
     #[test]
@@ -151,7 +184,11 @@ mod tests {
         let ssm = SSMOps::new("us-east-1");
         let path = "*".to_string();
         let recursive = true;
-        let result = ssm.get_parameters_by_path(&SSMParametersByPathRequest { path: path, with_decryption: Some(decrypt), recursive: Some(recursive) });
+        let result = ssm.get_parameters_by_path(&SSMParametersByPathRequest {
+            path: path,
+            with_decryption: Some(decrypt),
+            recursive: Some(recursive),
+        });
         assert!(result.is_err());
     }
 }
