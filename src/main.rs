@@ -9,9 +9,6 @@
 use failure::Error;
 use std::process;
 
-#[macro_use]
-extern crate structopt;
-
 extern crate serde;
 extern crate serde_json;
 #[macro_use]
@@ -46,12 +43,13 @@ mod ssm_parameters;
 /// Implement:
 /// [ ] Quiet Mode
 /// [ ] Logging
-/// [ ] Template Processing
+/// [X] Template Processing
 /// [ ] Clone Parameter Value
 /// [ ] Fail Crate
 /// [ ] Impl Default for Requests?
 /// Improve:
-/// [ ] Pagination calls
+/// [ ] Pagination calls Input
+/// [ ] Pagination calls Output
 /// [ ] Readme
 /// [ ] Output: human readable != json
 /// [ ] Tests

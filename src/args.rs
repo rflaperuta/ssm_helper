@@ -1,6 +1,7 @@
 use std::path::PathBuf;
+use structopt::StructOpt;
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt, Debug)]
 #[structopt(
     about = "AWS SSM Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust."
 )]
@@ -18,16 +19,16 @@ pub struct Opt {
     pub cmd: Command,
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(StructOpt, Debug)]
 pub enum Command {
     /// List All Parameters
-    #[structopt(name = "list-all", raw(visible_aliases = r#"&["la", "all"]"#))]
+    #[structopt(name = "list-all", aliases(&["l", "la"]))]
     ListAll {},
     /// Get Parameter by Name (or Path)
     #[structopt(name = "get", visible_alias = "g")]
     Get {
         /// Parameter Name
-        #[structopt(raw(required = "true", min_values = "1", max_values = "10"))]
+        #[structopt(required = true, min_values = 1, max_values = 10)]
         name: Vec<String>,
     },
     /// Template - Substitute vars in <templatein> and write to <templateout> or STDOUT
