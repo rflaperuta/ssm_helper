@@ -99,7 +99,10 @@ fn main() -> Result<(), Error> {
             templatein,
             templateout,
         } => {
-            eprintln!("IN: {:#?} - OUT: {:#?}", templatein, templateout);
+            eprintln!(
+                "Processing Template IN: {:#?} - OUT: {:#?}",
+                templatein, templateout
+            );
 
             match ssm.process_template(templatein, templateout) {
                 Ok(_) => {}
@@ -108,6 +111,8 @@ fn main() -> Result<(), Error> {
                     process::exit(1)
                 }
             }
+
+            eprintln!("Processing Finished!");
         }
         //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
         _ => (),
