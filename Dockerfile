@@ -1,9 +1,16 @@
-FROM rust:1.28.0 as builder
+FROM rust:1.38.0 as builder
 
-RUN rustup target add x86_64-unknown-linux-musl 
+RUN rustup target add x86_64-unknown-linux-musl \ 
+    && apt update \ 
+    && apt upgrade -y \
+    && apt-get install -y musl musl-dev musl-tools librust-openssl-dev librust-openssl-sys-dev libssl-dev upx-ucl
 
 WORKDIR /usr/src/build
 COPY . .
 
+ENV PKG_CONFIG_ALLOW_CROSS=1
+
 RUN cargo build --release \
-	&& cargo build --release --target=x86_64-unknown-linux-musl
+	&& cargo build --release --target=x86_64-unknown-linux-musl --features vendored \
+	&& strip ./target/release/ssm_helper \
+	&& strip ./target/x86_64-unknown-linux-musl/release/ssm_helper

@@ -6,6 +6,9 @@
 // option. All files in the project carrying such notice may not be copied,
 // modified, or distributed except according to those terms.
 
+#[macro_use]
+extern crate failure;
+
 use failure::Error;
 use std::process;
 
@@ -62,7 +65,7 @@ fn main() -> Result<(), Error> {
 
     // Will exit with error code 1 even for VersionDisplayed and HelpDisplayed
     if let Err(err) = clap_options {
-        println!("{}", err.message);
+        eprintln!("{}", err.message);
         process::exit(1)
     }
 
@@ -79,7 +82,7 @@ fn main() -> Result<(), Error> {
             })?
             .parameters
             .into_iter()
-            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
+            .for_each(|p| eprintln!("{}", serde_json::to_string(&p).unwrap()));
         }
         Command::ListAll {} => {
             ssm.get_parameters_by_path(&SSMParametersByPathRequest {
@@ -90,14 +93,21 @@ fn main() -> Result<(), Error> {
             .unwrap()
             .parameters
             .into_iter()
-            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
+            .for_each(|p| eprintln!("{}", serde_json::to_string(&p).unwrap()));
         }
         Command::Template {
             templatein,
             templateout,
         } => {
-            println!("IN: {:#?} - OUT: {:#?}", templatein, templateout);
-            ssm.process_template(templatein, templateout);
+            eprintln!("IN: {:#?} - OUT: {:#?}", templatein, templateout);
+
+            match ssm.process_template(templatein, templateout) {
+                Ok(_) => {}
+                Err(e) => {
+                    eprintln!("{}", e);
+                    process::exit(1)
+                }
+            }
         }
         //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
         _ => (),

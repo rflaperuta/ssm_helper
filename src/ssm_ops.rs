@@ -1,7 +1,7 @@
 use serde_json::value::Value as Json;
 use std::collections::HashMap;
-use std::fmt;
 use std::path::PathBuf;
+use std::{fmt, fs};
 
 use rusoto_core::Region;
 use rusoto_ssm::{GetParametersByPathRequest, GetParametersRequest, Ssm, SsmClient};
@@ -11,14 +11,11 @@ use crate::ssm_parameters::{
     SSMRequestError,
 };
 
+use failure::{Error, ResultExt};
 use handlebars::{
     template, Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
     RenderError,
 };
-//use handlebars::template::HelperTemplate;
-
-//use serde_json::value::Value as Json;
-use failure::Error;
 
 //#[derive(Debug)]
 pub struct SSMOps {
@@ -142,11 +139,10 @@ impl SSMOps {
         template_out: Option<PathBuf>,
     ) -> Result<(), Error> {
         if !template_in.is_file() {
-            //; // ???
             return Err(failure::err_msg(format!(
                 "Not a Valid File: {}",
                 template_in.to_str().unwrap()
-            ))); // Return early as a Error, must be a valid file
+            ))); // Return early as an Error, must be a valid file
         }
 
         let mut handlebars = Handlebars::new();
@@ -165,8 +161,8 @@ impl SSMOps {
                         .param(0)
                         .ok_or_else(|| RenderError::new("SSM Parameter name Required."))?;
 
-                    println!("CTX: {:#?}", ctx);
-                    println!("PARAM: {:#?}", param);
+                    //                    println!("CTX: {:#?}", ctx);
+                    //                    println!("PARAM: {:#?}", param);
 
                     let null = Json::Null;
                     let value = match ctx.data().as_object() {
@@ -174,7 +170,8 @@ impl SSMOps {
                         Some(ref o) => o.get(param.value().as_str().unwrap()).unwrap(),
                     };
 
-                    let rendered = format!("{}->{}", param.value().render(), value.render());
+                    //                    let rendered = format!("{}->{}", param.value().render(), value.render());
+                    let rendered = format!("{}", value.render());
                     out.write(rendered.as_ref())?;
 
                     Ok(())
@@ -182,28 +179,32 @@ impl SSMOps {
             ),
         );
 
-        if let Err(error) = handlebars.register_template_file("template_in", &template_in.as_path())
-        {
-            println!("TEMPLATE ERROR: {:#?}", error);
+        if let Err(error) = handlebars.register_template_file("template", &template_in.as_path()) {
+            //            println!("TEMPLATE ERROR: {:#?}", error);
+            bail!(error);
         }
 
-        let parameter_list: Vec<String> = self
-            .extract_parameters(handlebars.get_template("template_in"))
-            .unwrap();
+        let parameter_list: Vec<String> =
+            self.extract_parameters(handlebars.get_template("template"))?;
 
-        for p in &parameter_list {
-            println!("PARAMETER: {:#?}", p);
-        }
+        //        for p in &parameter_list {
+        //            println!("PARAMETER: {:#?}", p);
+        //        }
 
         let parameter_list = self.retrieve_parameters(parameter_list)?;
 
-        match handlebars.render("template_in", &parameter_list) {
-            Ok(output) => {
-                println!("OK.: {:#?}", output);
-            }
+        match handlebars.render("template", &parameter_list) {
             Err(e) => {
-                println!("ERR: {:#?}", e);
+                bail!(e);
             }
+            Ok(template_rendered) => match template_out {
+                Some(out_file) => {
+                    fs::write(out_file, template_rendered)?;
+                }
+                None => {
+                    println!("{}", template_rendered);
+                }
+            },
         }
 
         Ok(())
@@ -212,9 +213,9 @@ impl SSMOps {
     fn extract_parameters(
         &self,
         template: Option<&handlebars::template::Template>,
-    ) -> Result<Vec<String>, ()> {
+    ) -> Result<Vec<String>, Error> {
         let result: Vec<String> = template
-            .unwrap()
+            .ok_or(format_err!("Template Unavailable"))?
             .elements
             .iter()
             .filter_map(|element| match element {
@@ -245,7 +246,10 @@ impl SSMOps {
         match self.get_parameters(&gp) {
             Ok(result) => {
                 if result.invalid_parameters.len() > 0 {
-                    Err(failure::err_msg(result.invalid_parameters.join(", ")))
+                    return Err(failure::err_msg(format_err!(
+                        "Invalid Parameters: {}",
+                        result.invalid_parameters.join(", "),
+                    )));
                 } else {
                     let mut data: HashMap<String, String> = HashMap::new();
                     result.parameters.iter().for_each(|p| {
@@ -256,7 +260,5 @@ impl SSMOps {
             }
             Err(e) => Err(e),
         }
-
-        //        Ok(vec![SSMParametersResult{..Default::default()}])
     }
 }

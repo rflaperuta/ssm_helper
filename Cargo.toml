@@ -26,6 +26,7 @@ handlebars = "2.0.2"
 failure = "0.1.6"
 failure_derive = "0.1.6"
 structopt = "0.3.3"
+openssl-sys = "*"
 
 [profile.release]
 debug = false
@@ -34,3 +35,9 @@ lto = true
 #opt-level = 's'
 # Aggressive optimizations for size, further speed costs
 opt-level = 'z'
+panic = 'abort'
+
+[features]
+# Force openssl-sys to staticly link in the openssl library. Necessary when
+# cross compiling to x86_64-unknown-linux-musl.
+vendored = ["openssl-sys/vendored"]
