@@ -11,6 +11,8 @@ COPY . .
 ENV PKG_CONFIG_ALLOW_CROSS=1
 
 RUN cargo build --release \
-	&& cargo build --release --target=x86_64-unknown-linux-musl --features vendored \
+	&& cargo build --release --target=x86_64-unknown-linux-musl \
 	&& strip ./target/release/ssm_helper \
-	&& strip ./target/x86_64-unknown-linux-musl/release/ssm_helper
+	&& upx -9 ./target/release/ssm_helper \
+	&& strip ./target/x86_64-unknown-linux-musl/release/ssm_helper \
+	&& upx -9 ./target/x86_64-unknown-linux-musl/release/ssm_helper
