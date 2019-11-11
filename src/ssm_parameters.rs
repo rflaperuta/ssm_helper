@@ -7,6 +7,12 @@ pub struct SSMParameter {
 }
 
 #[derive(Debug)]
+pub struct SSMParameterRequest {
+    pub name: String,
+    pub with_decryption: Option<bool>,
+}
+
+#[derive(Debug)]
 pub struct SSMParametersRequest {
     pub names: Vec<String>,
     pub with_decryption: Option<bool>,

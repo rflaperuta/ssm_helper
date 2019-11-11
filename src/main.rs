@@ -72,6 +72,7 @@ fn main() -> Result<(), Error> {
     let options = Opt::from_clap(&clap_options.unwrap());
 
     let decrypt = options.decrypt;
+    let overwrite = options.overwrite;
     let ssm = SSMOps::new(&options.region);
 
     match options.cmd {
@@ -114,7 +115,21 @@ fn main() -> Result<(), Error> {
 
             eprintln!("Processing Finished!");
         }
-        //     Command::Clone{ origin, destination } => println!("Origin: {:#?} - Destination: {:#?}", origin, destination)
+        Command::Clone {
+            origin,
+            destination,
+        } => {
+            eprintln!("Cloning...");
+
+            match ssm.clone_parameter(origin, destination, overwrite) {
+                Ok(_) => {}
+                Err(e) => {
+                    eprintln!("{}", e);
+                    process::exit(1)
+                }
+            }
+            eprintln!("Clone Finished!");
+        }
         _ => (),
     }
     Ok(())

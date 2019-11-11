@@ -3,12 +3,15 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::{fmt, fs};
 
-use rusoto_core::Region;
-use rusoto_ssm::{GetParametersByPathRequest, GetParametersRequest, Ssm, SsmClient};
+use rusoto_core::{Region, RusotoError};
+use rusoto_ssm::{
+    GetParameterError, GetParameterRequest, GetParametersByPathRequest, GetParametersRequest,
+    PutParameterError, PutParameterRequest, Ssm, SsmClient,
+};
 
 use crate::ssm_parameters::{
-    SSMParameter, SSMParametersByPathRequest, SSMParametersRequest, SSMParametersResult,
-    SSMRequestError,
+    SSMParameter, SSMParameterRequest, SSMParametersByPathRequest, SSMParametersRequest,
+    SSMParametersResult, SSMRequestError,
 };
 
 use failure::{Error, ResultExt};
@@ -208,6 +211,201 @@ impl SSMOps {
         }
 
         Ok(())
+    }
+
+    pub fn clone_parameter(
+        &self,
+        origin: String,
+        destination: String,
+        overwrite: bool,
+    ) -> Result<(), Error> {
+        println!("Origin: {:#?} - Destination: {:#?}", origin, destination);
+
+        let source: SSMParameterRequest = SSMParameterRequest {
+            name: origin.clone(),
+            with_decryption: Some(false),
+        };
+
+        let source_param = self.get_one(source)?;
+
+        let dest: SSMParameter = SSMParameter {
+            name: Some(destination.clone()),
+            p_type: source_param.p_type,
+            value: source_param.value,
+            version: None,
+        };
+
+        self.put_one(dest, overwrite)?;
+
+        Ok(())
+    }
+
+    fn get_one(&self, parameter: SSMParameterRequest) -> Result<SSMParameter, Error> {
+        let input = GetParameterRequest {
+            name: parameter.name.clone(),
+            with_decryption: parameter.with_decryption,
+        };
+
+        match self.ssm_client.get_parameter(input.clone()).sync() {
+            Err(err) => match err {
+                RusotoError::Service(s_err) => match s_err as GetParameterError {
+                    GetParameterError::InternalServerError(_) => {
+                        Err(failure::err_msg("An error occurred on the server side."))
+                    }
+                    GetParameterError::InvalidKeyId(_) => {
+                        Err(failure::err_msg("The query key ID is not valid."))
+                    }
+                    GetParameterError::ParameterNotFound(_) => Err(
+                        format_err!("The parameter \'{}\' could not be found. Verify the name and try again.", parameter.name),
+                    ),
+                    GetParameterError::ParameterVersionNotFound(_) => {
+                        Err(failure::err_msg("The specified parameter version was not found. Verify the parameter name and version, and try again."))
+                    }
+                },
+                RusotoError::HttpDispatch(h_err) => {
+                    println!("{:?}", h_err);
+                    Err(failure::err_msg(h_err.to_string()))
+                }
+                RusotoError::Credentials(c_err) => {
+                    println!("{:?}", c_err);
+                    Err(failure::err_msg(c_err.to_string()))
+                }
+                RusotoError::Validation(v_err) => {
+                    println!("{:?}", v_err);
+                    Err(failure::err_msg(v_err.to_string()))
+                }
+                RusotoError::ParseError(p_err) => {
+                    println!("{:?}", p_err);
+                    Err(failure::err_msg(p_err.to_string()))
+                }
+                RusotoError::Unknown(_) => Err(failure::err_msg("Unknown Error.")),
+            },
+            Ok(res) => {
+                println!("{:?}", res);
+                let parm = res.parameter.unwrap();
+                Ok(SSMParameter{name: parm.name, value: parm.value, p_type: parm.type_, version: parm.version})
+            }
+        }
+    }
+
+    ///
+    /// GetParameter
+    /// {
+    //   "Parameter": {
+    //      "ARN": "string",
+    //      "LastModifiedDate": number,
+    //      "Name": "string",
+    //      "Selector": "string",
+    //      "SourceResult": "string",
+    //      "Type": "string",
+    //      "Value": "string",
+    //      "Version": number
+    //   }
+    // }
+    /// PutParameter
+    /// {
+    //   "Name": "string",
+    //   "Overwrite": boolean,
+    //   "Tier": "string",
+    //   "Type": "string",
+    //   "Value": "string"
+    /// }
+    ///    
+
+    fn put_one(&self, parameter: SSMParameter, overwrite: bool) -> Result<(), Error> {
+        let input: PutParameterRequest = PutParameterRequest {
+            allowed_pattern: None,
+            description: None,
+            key_id: None,
+            name: parameter
+                .name
+                .expect("Put Parameter: Invalid Parameter Name in Request."),
+            overwrite: Some(overwrite),
+            policies: None,
+            tags: None,
+            tier: Some("Standard".to_string()),
+            type_: parameter
+                .p_type
+                .expect("Put Parameter: Invalid Parameter Type in Request."),
+            value: parameter
+                .value
+                .expect("Put Parameter: Invalid Parameter Value in Request."),
+        };
+
+        match self.ssm_client.put_parameter(input.clone()).sync() {
+            Err(err) => match err {
+                RusotoError::Service(s_err) => match s_err as PutParameterError {
+                    PutParameterError::InternalServerError(_) => {
+                        Err(failure::err_msg("An error occurred on the server side."))
+                    }
+                    PutParameterError::InvalidKeyId(_) => {
+                        Err(failure::err_msg("The query key ID is not valid."))
+                    }
+                    PutParameterError::HierarchyLevelLimitExceeded(_) => {
+                        Err(failure::err_msg("A hierarchy can have a maximum of 15 levels."))
+                    }
+                    PutParameterError::HierarchyTypeMismatch(_) => {
+                        Err(failure::err_msg("Parameter Store does not support changing a parameter type in a hierarchy. For example, you can't change a parameter from a String type to a SecureString type. You must create a new, unique parameter."))
+                    }
+                    PutParameterError::IncompatiblePolicy(_) => {
+                        Err(failure::err_msg("There is a conflict in the policies specified for this parameter."))
+                    }
+                    PutParameterError::InvalidAllowedPattern(_) => {
+                        Err(failure::err_msg("The request does not meet the regular expression requirement."))
+                    }
+                    PutParameterError::InvalidPolicyAttribute(_) => {
+                        Err(failure::err_msg("A policy attribute or its value is invalid."))
+                    }
+                    PutParameterError::InvalidPolicyType(_) => {
+                        Err(failure::err_msg("he policy type is not supported. Parameter Store supports the following policy types: Expiration, ExpirationNotification, and NoChangeNotification."))
+                    }
+                    PutParameterError::ParameterAlreadyExists(_) => Err(
+                        format_err!("The parameter \'{}\' already exists. You can't create duplicate parameters. Set --overwrite if you want change the same parameter.", input.name.clone()),
+                    ),
+                    PutParameterError::ParameterLimitExceeded(_) => {
+                        Err(failure::err_msg("You have exceeded the number of parameters for this AWS account. Delete one or more parameters and try again."))
+                    }
+                    PutParameterError::ParameterMaxVersionLimitExceeded(_) => {
+                        Err(failure::err_msg("The parameter exceeded the maximum number of allowed versions."))
+                    }
+                    PutParameterError::ParameterPatternMismatch(_) => {
+                        Err(failure::err_msg("The parameter name is not valid."))
+                    }
+                    PutParameterError::PoliciesLimitExceeded(_) => {
+                        Err(failure::err_msg("You specified more than the maximum number of allowed policies for the parameter. The maximum is 10."))
+                    }
+                    PutParameterError::TooManyUpdates(_) => {
+                        Err(failure::err_msg("here are concurrent updates for a resource that supports one update at a time."))
+                    }
+                    PutParameterError::UnsupportedParameterType(_) => Err(
+                        format_err!("The parameter type \'{}\' is not supported.", input.type_.clone()),
+                    ),
+                },
+                RusotoError::HttpDispatch(h_err) => {
+                    println!("{:?}", h_err);
+                    Err(failure::err_msg(h_err.to_string()))
+                }
+                RusotoError::Credentials(c_err) => {
+                    println!("{:?}", c_err);
+                    Err(failure::err_msg(c_err.to_string()))
+                }
+                RusotoError::Validation(v_err) => {
+                    println!("{:?}", v_err);
+                    Err(failure::err_msg(v_err.to_string()))
+                }
+                RusotoError::ParseError(p_err) => {
+                    println!("{:?}", p_err);
+                    Err(failure::err_msg(p_err.to_string()))
+                }
+                RusotoError::Unknown(_) => Err(failure::err_msg("Unknown Error.")),
+            },
+            Ok(res) => {
+                println!("{:?}", res);
+                //                let parm = res.parameter.unwrap();
+                //                Ok(SSMParameter{name: parm.name, value: parm.value, p_type: parm.type_, version: parm.version})
+                Ok(())
+            }
+        }
     }
 
     fn extract_parameters(

@@ -12,6 +12,8 @@ pub struct Opt {
     /// Decrypt Parameter Value
     #[structopt(short = "d", long = "decrypt")]
     pub decrypt: bool,
+    #[structopt(short = "o", long = "overwrite")]
+    pub overwrite: bool,
     /// Quiet Mode => Only Errors and Parameter Output
     #[structopt(short = "q", long = "quiet")]
     pub quiet: bool,
