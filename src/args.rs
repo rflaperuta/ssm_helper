@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use structopt::StructOpt;
 
 #[derive(StructOpt, Debug)]
-#[structopt(
-    about = "AWS SSM Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust."
+#[structopt(name = "ssm_helper",
+    about = "AWS Parameter Store Helper - A command line helper for AWS SSM Parameters, written in Rust."
 )]
 pub struct Opt {
     /// AWS Region
@@ -12,6 +12,7 @@ pub struct Opt {
     /// Decrypt Parameter Value
     #[structopt(short = "d", long = "decrypt")]
     pub decrypt: bool,
+    /// Overwrite Destination Parameter
     #[structopt(short = "o", long = "overwrite")]
     pub overwrite: bool,
     /// Quiet Mode => Only Errors and Parameter Output
@@ -24,8 +25,8 @@ pub struct Opt {
 #[derive(StructOpt, Debug)]
 pub enum Command {
     /// List All Parameters
-    #[structopt(name = "list-all", aliases(&["l", "la"]))]
-    ListAll {},
+    #[structopt(name = "list-all", visible_alias = "la")]
+    ListAll,
     /// Get Parameter by Name (or Path)
     #[structopt(name = "get", visible_alias = "g")]
     Get {
@@ -50,5 +51,13 @@ pub enum Command {
         origin: String,
         /// Destination Parameter Name
         destination: String,
+    },
+    /// Recursivelly Copy Parameter's Value Renaming From Origin Prefix to Destination Prefix
+    #[structopt(name = "clone-all", visible_alias = "ca")]
+    CloneAll {
+        /// Origin Prefix Name
+        prefixorigin: String,
+        /// Destination Prefix Name
+        prefixdestination: String,
     },
 }

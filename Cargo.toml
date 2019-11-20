@@ -25,7 +25,7 @@ serde_json = "1.0.41"
 handlebars = "2.0.2"
 failure = "0.1.6"
 failure_derive = "0.1.6"
-structopt = "0.3.3"
+structopt = "0.3.4"
 #openssl-sys = "*"
 
 # The development profile, used for `cargo build`

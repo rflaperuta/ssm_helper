@@ -14,7 +14,7 @@ use crate::ssm_parameters::{
     SSMParametersResult, SSMRequestError,
 };
 
-use failure::{Error, ResultExt};
+use failure::Error;
 use handlebars::{
     template, Context, Handlebars, Helper, HelperResult, JsonRender, Output, RenderContext,
     RenderError,
@@ -155,9 +155,9 @@ impl SSMOps {
             "ssm",
             Box::new(
                 |h: &Helper,
-                 r: &Handlebars,
+                 _r: &Handlebars,
                  ctx: &Context,
-                 rc: &mut RenderContext,
+                 _rc: &mut RenderContext,
                  out: &mut dyn Output|
                  -> HelperResult {
                     let param = h
@@ -236,6 +236,33 @@ impl SSMOps {
         };
 
         self.put_one(dest, overwrite)?;
+
+        Ok(())
+    }
+
+    pub fn clone_recursive(
+        &self,
+        origin: String,
+        destination: String,
+        overwrite: bool,
+    ) -> Result<(), Error> {
+        println!("Origin: {:#?} - Destination: {:#?}", origin, destination);
+
+//        let source: SSMParameterRequest = SSMParameterRequest {
+//            name: origin.clone(),
+//            with_decryption: Some(false),
+//        };
+//
+//        let source_param = self.get_one(source)?;
+//
+//        let dest: SSMParameter = SSMParameter {
+//            name: Some(destination.clone()),
+//            p_type: source_param.p_type,
+//            value: source_param.value,
+//            version: None,
+//        };
+//
+//        self.put_one(dest, overwrite)?;
 
         Ok(())
     }

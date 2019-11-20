@@ -47,11 +47,11 @@ mod ssm_parameters;
 /// [ ] Quiet Mode
 /// [ ] Logging
 /// [X] Template Processing
-/// [ ] Clone Parameter Value
-/// [ ] Fail Crate
+/// [X] Clone Parameter Value
+/// [X] Fail Crate
 /// [ ] Impl Default for Requests?
 /// Improve:
-/// [ ] Pagination calls Input
+/// [X] Pagination calls Input
 /// [ ] Pagination calls Output
 /// [ ] Readme
 /// [ ] Output: human readable != json
@@ -83,7 +83,7 @@ fn main() -> Result<(), Error> {
             })?
             .parameters
             .into_iter()
-            .for_each(|p| eprintln!("{}", serde_json::to_string(&p).unwrap()));
+            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
         }
         Command::ListAll {} => {
             ssm.get_parameters_by_path(&SSMParametersByPathRequest {
@@ -94,13 +94,13 @@ fn main() -> Result<(), Error> {
             .unwrap()
             .parameters
             .into_iter()
-            .for_each(|p| eprintln!("{}", serde_json::to_string(&p).unwrap()));
+            .for_each(|p| println!("{}", serde_json::to_string(&p).unwrap()));
         }
         Command::Template {
             templatein,
             templateout,
         } => {
-            eprintln!(
+            println!(
                 "Processing Template IN: {:#?} - OUT: {:#?}",
                 templatein, templateout
             );
@@ -113,13 +113,13 @@ fn main() -> Result<(), Error> {
                 }
             }
 
-            eprintln!("Processing Finished!");
+            println!("Processing Finished!");
         }
         Command::Clone {
             origin,
             destination,
         } => {
-            eprintln!("Cloning...");
+            println!("Cloning...");
 
             match ssm.clone_parameter(origin, destination, overwrite) {
                 Ok(_) => {}
@@ -128,7 +128,23 @@ fn main() -> Result<(), Error> {
                     process::exit(1)
                 }
             }
-            eprintln!("Clone Finished!");
+            println!("Clone Finished!");
+        }
+        Command::CloneAll {
+            prefixorigin, 
+            prefixdestination,
+        } => {
+            println!("Cloning...");
+
+            match ssm.clone_recursive(prefixorigin, prefixdestination, overwrite) {
+                Ok(_) => {}
+                Err(e) => {
+                    eprintln!("{}", e);
+                    process::exit(1)
+                }
+            }
+            
+            println!("Clone Finished!");
         }
         _ => (),
     }
