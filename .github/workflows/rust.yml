@@ -30,9 +30,11 @@ jobs:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               run: cargo test --verbose
-            - name: Save Results
-              uses: actions/upload-artifact@v1
-              with:
-                  name: ssm_helper-${{ matrix.target }}
-                  path: target/release/ssm_helper
+            - name: Tree
+              run: tree
+#            - name: Save Results
+#              uses: actions/upload-artifact@v1
+#              with:
+#                  name: ssm_helper-${{ matrix.target }}
+#                  path: target/release/ssm_helper
               

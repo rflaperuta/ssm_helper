@@ -17,15 +17,15 @@ name = "ssm_helper"
 path = "src/main.rs"
 
 [dependencies]
-rusoto_core = {version="0.42.0", default_features = false, features=["rustls"]}
-rusoto_ssm = {version="0.42.0", default_features = false, features=["rustls"]}
-serde = "1.0.101"
-serde_derive = "1.0.101"
-serde_json = "1.0.41"
-handlebars = "2.0.2"
+rusoto_core = { version = "0.42.0", default_features = false, features = ["rustls"] }
+rusoto_ssm = { version = "0.42.0", default_features = false, features = ["rustls"] }
+serde = "1.0.104"
+serde_derive = "1.0.104"
+serde_json = "1.0.44"
+handlebars = "2.0.4"
 failure = "0.1.6"
 failure_derive = "0.1.6"
-structopt = "0.3.4"
+structopt = "0.3.7"
 #openssl-sys = "*"
 
 # The development profile, used for `cargo build`
