@@ -31,7 +31,7 @@ jobs:
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
               run: cargo test --verbose
             - name: Tree
-              run: tree
+              run: ls -alFR
 #            - name: Save Results
 #              uses: actions/upload-artifact@v1
 #              with:
