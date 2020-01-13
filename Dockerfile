@@ -5,10 +5,14 @@ RUN rustup target add x86_64-unknown-linux-musl \
     && apt upgrade -y \
     && apt-get install -y musl musl-dev musl-tools librust-openssl-dev librust-openssl-sys-dev libssl-dev upx-ucl
 
-WORKDIR /usr/src/build
-COPY . .
-
 ENV PKG_CONFIG_ALLOW_CROSS=1
+
+WORKDIR /usr/src/build
+COPY Cargo.* ./
+RUN mkdir .cargo \
+    && cargo vendor > .cargo/config
+
+COPY . .
 
 RUN cargo build --release \
 	&& cargo build --release --target=x86_64-unknown-linux-musl \

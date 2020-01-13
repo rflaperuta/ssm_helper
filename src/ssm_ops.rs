@@ -246,7 +246,7 @@ impl SSMOps {
         destination: String,
         overwrite: bool,
     ) -> Result<(), Error> {
-        println!("Origin: {:#?} - Destination: {:#?}", origin, destination);
+        println!("Origin: {:#?} - Destination: {:#?} - Overwrite: {:#?}", origin, destination, overwrite);
 
 //        let source: SSMParameterRequest = SSMParameterRequest {
 //            name: origin.clone(),
