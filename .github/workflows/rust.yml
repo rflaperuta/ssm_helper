@@ -1,5 +1,8 @@
 name: Build SSM Helper
-on: [push]
+on:
+    push:
+        tags:
+            - v*
 
 jobs:
     build:
@@ -35,6 +38,6 @@ jobs:
             - name: Save Artifact
               uses: actions/upload-artifact@v1
               with:
-                  name: ssm_helper-${{ matrix.target }}
+                  name: ssm_helper-${{ matrix.target }}-${{ github.ref }}
                   path: target/${{ matrix.target }}/release/ssm_helper
               
