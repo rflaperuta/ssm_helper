@@ -1,8 +1,5 @@
 name: Build SSM Helper
-on:
-    push:
-        tags:
-            - v*
+on: [push]
 
 jobs:
     build:
@@ -38,6 +35,55 @@ jobs:
             - name: Save Artifact
               uses: actions/upload-artifact@v1
               with:
-                  name: ssm_helper-${{ matrix.target }}-${{ github.ref }}
+                  name: ssm_helper-${{ matrix.target }}
                   path: target/${{ matrix.target }}/release/ssm_helper
-              
+    release:
+        name: Generate Release
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                target:
+                    - x86_64-unknown-linux-gnu
+                    - x86_64-unknown-linux-musl
+        if: success() && contains(github.ref, 'tags')
+        steps:
+            - name: Get the version
+              id: get_version
+              run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+            - name: Retrieve Artifacts
+              uses: actions/download-artifact@v1
+              with:
+                  name: ssm_helper-${{ matrix.target[0] }}
+            - name: Retrieve Artifacts
+              uses: actions/download-artifact@v1
+              with:
+                  name: ssm_helper-${{ matrix.target[1] }}
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Release ${{ github.ref }}
+                  body: Release ${{ github.ref }}
+                  draft: true
+                  prerelease: false
+            - name: Upload Release Asset
+              uses: actions/upload-release-asset@v1.0.1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }} 
+                  asset_path: ./ssm_helper-${{ matrix.target[0] }}
+                  asset_name: ssm_helper-${{ matrix.target[0] }}
+                  asset_content_type: application/zip
+            - name: Upload Release Asset
+              uses: actions/upload-release-asset@v1.0.1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ steps.create_release.outputs.upload_url }}
+                  asset_path: ./ssm_helper-${{ matrix.target[1] }}
+                  asset_name: ssm_helper-${{ matrix.target[1] }}
+                  asset_content_type: application/zip
