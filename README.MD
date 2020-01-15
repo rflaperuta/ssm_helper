@@ -2,6 +2,8 @@ AWS SSM Helper
 ===
 AWS SSM Parameter Store Helper - A command line tool for AWS SSM Parameters, written in Rust.
 
+Build Status: ![](https://github.com/rflaperuta/ssm_helper/workflows/.github/workflows/rust.yml/badge.svg)
+
 Contents
 - [AWS SSM Helper](#aws-ssm-helper)
     - [About](#about)
