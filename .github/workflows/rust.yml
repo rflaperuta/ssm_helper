@@ -18,6 +18,15 @@ jobs:
                   toolchain: stable
                   target: ${{ matrix.target }}
                   override: true
+            - name: Cache Rust Modules
+              uses: actions/cache@v1
+              with:
+                  path: ~/.cargo
+                  key: ${{ matrix.target }}-rust-${{ hashFiles('Cargo.lock') }}
+                  restore-keys: |
+                      ${{ matrix.target }}-build-${{ env.cache-name }}-
+                      ${{ matrix.target }}-build-
+                      ${{ matrix.target }}-                  
             - name: Build
               uses: actions-rs/cargo@v1
               with:
