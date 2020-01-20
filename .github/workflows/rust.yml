@@ -53,6 +53,8 @@ jobs:
               uses: actions/download-artifact@v1
               with:
                   name: ssm_helper-x86_64-unknown-linux-musl
+            - name: List
+              run: ls -alFR
             - name: Create Release
               id: create_release
               uses: actions/create-release@v1
